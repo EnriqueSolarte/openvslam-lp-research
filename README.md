@@ -1,6 +1,6 @@
-<p align="center">
+<!-- <p align="center">
 <img src="https://raw.githubusercontent.com/OpenVSLAM-Community/openvslam/main/docs/img/logo.png" width="435px">
-</p>
+</p> -->
 
 # OpenVSLAM: A Versatile Visual SLAM Framework
 <!-- [![Wercker Status](https://app.wercker.com/status/402b9e7a1fae92493519fff03d513565/s/main "wercker status")](https://app.wercker.com/ymd-stella/openvslam/runs)
