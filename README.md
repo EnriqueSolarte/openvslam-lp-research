@@ -3,23 +3,28 @@
 </p>
 
 # OpenVSLAM: A Versatile Visual SLAM Framework
-[![Wercker Status](https://app.wercker.com/status/402b9e7a1fae92493519fff03d513565/s/main "wercker status")](https://app.wercker.com/ymd-stella/openvslam/runs)
-[![Documentation Status](https://readthedocs.org/projects/openvslam-community/badge/?version=latest)](https://openvslam-community.readthedocs.io/en/latest/?badge=latest)
+<!-- [![Wercker Status](https://app.wercker.com/status/402b9e7a1fae92493519fff03d513565/s/main "wercker status")](https://app.wercker.com/ymd-stella/openvslam/runs)
+[![Documentation Status](https://readthedocs.org/projects/openvslam-community/badge/?version=latest)](https://openvslam-community.readthedocs.io/en/latest/?badge=latest) -->
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
 
 ---
 
-> *NOTE:* This is a community fork of [xdspacelab/openvslam](https://github.com/xdspacelab/openvslam). It was created to continue active development of OpenVSLAM.
+> [!WARNING] 
+> This is forked REPO from of [lp-research/openvslam](https://github.com/lp-research/openvslam). From the original REPO [OpenVSLAM](https://github.com/xdspacelab/openvslam) (already deleted 😢 due to license issues [Termination of the release](https://github.com/xdspacelab/openvslam/wiki/Termination-of-the-release)).
 
+## Change Log
+
+* 2025-04-09: 
+   * Define tag version v1.0
+   * Modify Dockerfile.desktop
+   * Add scripts to build and run docker image 
 ---
 
 ## Overview
 
-[<img src="https://raw.githubusercontent.com/OpenVSLAM-Community/openvslam/main/docs/img/teaser.png" width="640px">](https://arxiv.org/abs/1910.01122)
-
 <img src="https://j.gifs.com/81m1QL.gif" width="640px">
 
-[**[PrePrint]**](https://arxiv.org/abs/1910.01122) [**[YouTube]**](https://www.youtube.com/watch?v=Ro_s3Lbx5ms)
+[**[PrePrint]**](https://arxiv.org/abs/1910.01122)
 
 OpenVSLAM is a monocular, stereo, and RGBD visual SLAM system.
 The notable features are:

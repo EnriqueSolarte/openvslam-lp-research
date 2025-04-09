@@ -198,8 +198,9 @@ RUN set -x && \
   rm -rf *
 ENV Pangolin_DIR=${CMAKE_INSTALL_PREFIX}/lib/cmake/Pangolin
 
-# OpenVSLAM
-COPY . /openvslam/
+RUN set -x && \
+  git clone --branch stable https://github.com/EnriqueSolarte/openvslam-lp-research.git /openvslam 
+
 WORKDIR /openvslam/
 RUN set -x && \
   mkdir -p build && \
