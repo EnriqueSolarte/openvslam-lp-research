@@ -3,7 +3,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 # install dependencies via apt
 ENV DEBCONF_NOWARNINGS yes
-RUN set -x && \
+RUN set -ex && \
   apt-get update -y -qq && \
   apt-get upgrade -y -qq --no-install-recommends && \
   : "basic dependencies" && \
@@ -44,7 +44,7 @@ RUN set -x && \
   rm -rf /var/lib/apt/lists/*
 
 ARG CMAKE_INSTALL_PREFIX=/usr/local
-ARG NUM_THREADS=1
+ARG NUM_THREADS=4
 
 ENV CPATH=${CMAKE_INSTALL_PREFIX}/include:${CPATH}
 ENV C_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/include:${C_INCLUDE_PATH}
@@ -58,21 +58,18 @@ ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPA
 # Eigen
 ARG EIGEN3_VERSION=3.3.7
 WORKDIR /tmp
-RUN set -x && \
-  wget -q https://gitlab.com/libeigen/eigen/-/archive/${EIGEN3_VERSION}/eigen-${EIGEN3_VERSION}.tar.bz2 && \
-  tar xf eigen-${EIGEN3_VERSION}.tar.bz2 && \
-  rm -rf eigen-${EIGEN3_VERSION}.tar.bz2 && \
-  cd eigen-${EIGEN3_VERSION} && \
-  mkdir -p build && \
-  cd build && \
-  cmake \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} \
-    .. && \
-  make -j${NUM_THREADS} && \
-  make install && \
-  cd /tmp && \
-  rm -rf *
+RUN set -ex && \
+    wget -q https://gitlab.com/libeigen/eigen/-/archive/${EIGEN3_VERSION}/eigen-${EIGEN3_VERSION}.tar.gz && \
+    tar xf eigen-${EIGEN3_VERSION}.tar.gz && \
+    rm -rf eigen-${EIGEN3_VERSION}.tar.gz && \
+    cd eigen-${EIGEN3_VERSION} && \
+    mkdir -p build && \
+    cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} .. && \
+    make -j$(nproc) && \
+    make install && \
+    cd /tmp && \
+    rm -rf eigen-${EIGEN3_VERSION}
 ENV Eigen3_DIR=${CMAKE_INSTALL_PREFIX}/share/eigen3/cmake
 
 # g2o
@@ -89,6 +86,7 @@ RUN set -x && \
     -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} \
     -DBUILD_SHARED_LIBS=ON \
     -DBUILD_UNITTESTS=OFF \
+    -DBUILD_WITH_MARCH_NATIVE=ON \
     -DG2O_USE_CHOLMOD=OFF \
     -DG2O_USE_CSPARSE=ON \
     -DG2O_USE_OPENGL=OFF \
@@ -137,6 +135,25 @@ RUN set -x && \
   cd /tmp && \
   rm -rf *
 ENV OpenCV_DIR=${CMAKE_INSTALL_PREFIX}/lib/cmake/opencv4
+
+# DBoW2
+ARG DBOW2_COMMIT=687fcb74dd13717c46add667e3fbfa9828a7019f
+WORKDIR /tmp
+RUN set -x && \
+  git clone https://github.com/shinsumicco/DBoW2.git && \
+  cd DBoW2 && \
+  git checkout ${DBOW2_COMMIT} && \
+  mkdir -p build && \
+  cd build && \
+  cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} \
+    .. && \
+  make -j${NUM_THREADS} && \
+  make install && \
+  cd /tmp && \
+  rm -rf *
+ENV DBoW2_DIR=${CMAKE_INSTALL_PREFIX}/lib/cmake/DBoW2
 
 # Pangolin
 ARG PANGOLIN_COMMIT=ad8b5f83222291c51b4800d5a5873b0e90a0cf81
@@ -188,13 +205,41 @@ RUN set -x && \
   mkdir -p build && \
   cd build && \
   cmake \
+    -DBUILD_WITH_MARCH_NATIVE=ON \
     -DUSE_PANGOLIN_VIEWER=ON \
-    -DBUILD_EXAMPLES=ON \
+    -DUSE_SOCKET_PUBLISHER=OFF \
     -DUSE_STACK_TRACE_LOGGER=ON \
+    -DBOW_FRAMEWORK=DBoW2 \
+    -DBUILD_TESTS=OFF \
+    -DBUILD_EXAMPLES=ON \
     .. && \
   make -j${NUM_THREADS} && \
-  rm -rf CMakeCache.txt CMakeFiles Makefile cmake_install.cmake example src && \
+  rm -rf CMakeCache.txt CTestTestfile.cmake \
+  CMakeFiles Makefile cmake_install.cmake \
+  example src bin \
+  googletest* \
+  && \
   chmod -R 777 ./*
 
+ARG USER=nobody
+ARG USERNAME=$USER-docker
+ARG USER_UID=1002
+ARG USER_GID=$USER_UID
+
+# Create a non-root user
+RUN groupadd --gid $USER_GID $USERNAME \
+  && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
+  # Add sudo support for the non-root user
+  && apt-get update \
+  && apt-get install -y --no-install-recommends sudo \
+  && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME\
+  && chmod 0440 /etc/sudoers.d/$USERNAME \
+  && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /openvslam/build/
-ENTRYPOINT ["/bin/bash"]
+
+USER $USERNAME
+# Set the default shell to bash
+ENV TERM=xterm-256color
+ENV USER=$USERNAME
+CMD ["bash", "-l"]
